@@ -134,7 +134,7 @@ hypothesis = softmax(tf.matmul(W, o+u))
 cost = tf.reduce_sum(tf.square(hypothesis - Answer))
 
 # Minimizing
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.008)
 train = optimizer.minimize(cost)
 
 # Launch the graph in a session.
@@ -150,6 +150,7 @@ print("[Answer] {}".format(ans[0]))
 
 '''
 # TEST
+result = None
 for step in range(1001):
     if step % 200 == 0:
         result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
@@ -166,12 +167,11 @@ cost_mean = 1000
 step = 0
 
 # Training
-while cost_mean > 0.5:
+while cost_mean > 0.6:
     if step % 1 == 0:
         result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
         i = np.argmax(result)
-        print("[{}'s Output] {}".format(step, dictionary[i]))
-        print(cost_mean)
+        print("[{}'s Output] {}\nCost: {}".format(step, dictionary[i], cost_mean))
     cost_mean = 0
     for index in range(len(storyArr)):
         sess.run(train, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]})
@@ -182,5 +182,74 @@ while cost_mean > 0.5:
 
 result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
 i = np.argmax(result)
-print("[{}'s Output] {}".format(step, dictionary[i]))
-print(cost_mean)
+print("[{}'s Output] {}\nCost: {}".format(step, dictionary[i],cost_mean))
+
+# 사용자 인터페이스
+flag = True
+
+
+def refineWord(list):
+    for i, word in enumerate(list):
+        if '.' in word:
+            list[i] = list[i].replace('.', '')
+        elif '?' in word:
+            list[i] = list[i].replace('?', '')
+
+
+while flag:
+    print('\n\nStory를 입력해주세요')
+    print('END 를 입력하면 Story 입력을 종료합니다')
+    user_story = []
+    while True:
+        user = input()
+        if user == 'END':
+            break
+        else:
+            temp = user.split()
+            refineWord(temp)
+            user_story.append(temp)
+    print('Question을 입력해주세요')
+    user = input()
+    user_question = user.split()
+    refineWord(user_question)
+
+    # print('Answer을 입력해주세요')
+    # user_answer = input()
+
+    user_storyArr = np.zeros([_WORD, len(user_story)])
+    user_questionArr = np.zeros([_WORD, 1])
+    # user_answerArr = np.zeros([_WORD, 1])
+
+    try:
+        for i, sent in enumerate(user_story):
+            s = np.zeros([_WORD, 1])
+            for word in sent:
+                s[dictionary.index(word), 0] = 1
+            user_storyArr[:, [i]] = s
+        for word in user_question:
+            user_questionArr[dictionary.index(word), 0] = 1
+        # user_answerArr[dictionary.index(user_answer), 0] = 1
+    except ValueError:
+        print('사전에 없는 단어를 입력하였습니다')
+        continue
+
+    print("\n\n[STORY]")
+    for story in user_story:
+        print(" ".join(story))
+    print("[Question] {}?".format(" ".join(user_question)))
+    # print("[Answer] {}".format(user_answer))
+
+    result = sess.run(tf.transpose(hypothesis),
+                      feed_dict={X: user_storyArr, Q: user_questionArr})
+    result = result * 100
+    str1 = ""
+    for _ in range(5):
+        i = np.argmax(result)
+        percent = int(result[0][i])
+        result[0, i] = -1
+        str1 = str1 + "{}\t\t".format(dictionary[i])
+        for i in range(int(percent/2)):
+            str1 = str1 + '|'
+        str1 = str1 + " {}%\n".format(percent)
+
+    print("[Output]\n{}".format(str1))
