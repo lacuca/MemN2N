@@ -68,12 +68,12 @@ questionArr = []
 ansArr = []
 
 for sents in story:
-    storyArr.append([])
-    for sent in sents:
+    storyArr.append(np.zeros([_WORD, len(sents)]))
+    for i, sent in enumerate(sents):
         s = sentence.copy()
         for word in sent:
             s[dictionary.index(word), 0] = 1
-        storyArr[-1].append(s)
+        storyArr[-1][:, [i]] = s
 
 for sent in question:
     s = sentence.copy()
@@ -97,3 +97,54 @@ for i in range(len(ans)):
     print(ans[i], '\n', ansArr[i].T)
 '''
 
+# Input (Sentences)
+X = tf.placeholder(tf.float32, shape=[_WORD, None])
+# Question q
+Q = tf.placeholder(tf.float32, shape=[_WORD, 1])
+# Desired Answer
+Answer = tf.placeholder(tf.float32, shape=[_WORD, 1])
+# Predicted Answer ( 계산해서 나온것 )
+hypothesis = None
+
+# Weights
+W = tf.Variable(tf.random_normal([_WORD, _MEMORY]), name='weight')
+C = tf.transpose(W)
+A = tf.Variable(tf.random_normal([_MEMORY, _WORD]), name='Embedding_A')
+B = A
+
+# Inputs -> Weights -> Outputs -> O + u -> Predicted Answer
+Inputs = tf.matmul(A, X)
+u = tf.matmul(B, Q)
+
+def softmax(M):
+    M = tf.exp(M)
+    M = M / tf.reduce_sum(M)
+    return M
+
+Weights = softmax(tf.matmul(tf.transpose(u), Inputs))
+Outputs = tf.matmul(C, X)
+o = tf.reduce_sum(Outputs * Weights)
+hypothesis = softmax(tf.matmul(W, o+u))
+
+# cost
+cost = tf.reduce_mean(tf.square(hypothesis - Answer))
+
+# Minimizing
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
+train = optimizer.minimize(cost)
+
+# Launch the graph in a session.
+sess = tf.Session()
+# Initializes global variables in the graph.
+sess.run(tf.global_variables_initializer())
+
+print("\n\n[STORY]")
+print(" ".join(story[0][0]))
+print(" ".join(story[0][1]))
+print("[Question] {}?".format(" ".join(question[0])))
+print("[Answer] {}".format(ans[0]))
+result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
+# result = result * 100
+# print(result, np.sum(result), type(result))
+i = np.argmax(result)
+print("\n[Output] {}".format(dictionary[i]))
