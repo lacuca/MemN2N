@@ -8,7 +8,7 @@ f.close()
 
 # 상수 Constant
 _WORD = 20      # 사전의 크기 (사전이 저장할 수 있는 최대 WORD)
-_MEMORY = 10    # Memory Vector의 크기
+_MEMORY = 11    # Memory Vector의 크기
 #################
 
 
@@ -38,6 +38,9 @@ for l in data:
 print('받아온 문항 수: {}문항'.format(len(ans)))
 
 dictionary = []
+for i in range(_WORD):
+    dictionary.append('')
+index = 0
 
 def isNumber(s):
   try:
@@ -56,7 +59,8 @@ for l in data:
         elif '?' in word:
             word = word.replace('?', '')
         if word not in dictionary:
-            dictionary.append(word)
+            dictionary[index] = word
+            index = index + 1
 
 # 테스트 출력
 print('사용된 단어: {}종류\n'.format(len(dictionary)), dictionary)
@@ -108,9 +112,9 @@ hypothesis = None
 
 # Weights
 W = tf.Variable(tf.random_normal([_WORD, _MEMORY]), name='weight')
-C = tf.transpose(W)
+C = tf.transpose(W)     # Embedding C
 A = tf.Variable(tf.random_normal([_MEMORY, _WORD]), name='Embedding_A')
-B = A
+B = A                   # Embedding B
 
 # Inputs -> Weights -> Outputs -> O + u -> Predicted Answer
 Inputs = tf.matmul(A, X)
@@ -127,7 +131,7 @@ o = tf.reduce_sum(Outputs * Weights)
 hypothesis = softmax(tf.matmul(W, o+u))
 
 # cost
-cost = tf.reduce_mean(tf.square(hypothesis - Answer))
+cost = tf.reduce_sum(tf.square(hypothesis - Answer))
 
 # Minimizing
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
@@ -138,13 +142,45 @@ sess = tf.Session()
 # Initializes global variables in the graph.
 sess.run(tf.global_variables_initializer())
 
-print("\n\n[STORY]")
+print("\nTrain이 잘됐는지 다음 스토리로 테스트 해봅시다\n\n[STORY]")
 print(" ".join(story[0][0]))
 print(" ".join(story[0][1]))
 print("[Question] {}?".format(" ".join(question[0])))
 print("[Answer] {}".format(ans[0]))
+
+'''
+# TEST
+for step in range(1001):
+    if step % 200 == 0:
+        result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
+        i = np.argmax(result)
+        print("[{}'s Output] {}".format(step, dictionary[i]))
+        W_value, A_value, cost_value = sess.run([W, A, cost],
+                                                feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
+        print(W_value[0, 0], cost_value)
+    sess.run(train, feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
+'''
+
+# 초기값설정
+cost_mean = 1000
+step = 0
+
+# Training
+while cost_mean > 0.5:
+    if step % 1 == 0:
+        result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
+        i = np.argmax(result)
+        print("[{}'s Output] {}".format(step, dictionary[i]))
+        print(cost_mean)
+    cost_mean = 0
+    for index in range(len(storyArr)):
+        sess.run(train, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]})
+        cost_value = sess.run(cost, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]})
+        cost_mean = cost_mean + cost_value
+    cost_mean = cost_mean / len(storyArr)
+    step = step + 1
+
 result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
-# result = result * 100
-# print(result, np.sum(result), type(result))
 i = np.argmax(result)
-print("\n[Output] {}".format(dictionary[i]))
+print("[{}'s Output] {}".format(step, dictionary[i]))
+print(cost_mean)
