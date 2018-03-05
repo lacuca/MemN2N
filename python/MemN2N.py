@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 # train data 가져오기
-f = open('train_1k.txt', 'r')
+f = open('train.txt', 'r')
 data = f.readlines()
 f.close()
 
@@ -16,23 +16,30 @@ story = []
 question = []
 ans = []
 
-flag = True
 
+flag = False    # 새로운 스토리 라인 인가?
 for l in data:
-    if flag:
-        story.append([])
-        flag = False
     line = l.split()
+    if float(line[0]) == 1:
+        # print(l,  'NEW STORY LINE')
+        # print(story)
+        # print("=" * 20)
+        story.append([])
+        flag = True
     if '.' in line[-1]:
         line[-1] = line[-1].replace('.', '')
         story[-1].append(line[1:])
-    for i, word in enumerate(line):
-        if '?' in word:
-            line[i] = word.replace('?', '')
-            question.append(line[1:i+1])
-            ans.append(line[i+1])
-            flag = True
-            break
+    else:
+        for i, word in enumerate(line):
+            if '?' in word:
+                line[i] = word.replace('?', '')
+                question.append(line[1:i+1])
+                ans.append(line[i+1])
+                if not flag:
+                    story.append(story[-1].copy())
+                else:
+                    flag = False
+                break
 
 # 테스트 출력
 print('받아온 문항 수: {}문항'.format(len(ans)))
@@ -63,7 +70,7 @@ for l in data:
             index = index + 1
 
 # 테스트 출력
-print('사용된 단어: {}종류\n'.format(len(dictionary)), dictionary)
+print('사용된 단어: {}종류\n'.format(dictionary.index('')), dictionary)
 
 sentence = np.zeros([_WORD, 1])
 
@@ -90,16 +97,21 @@ for word in ans:
     s[dictionary.index(word), 0] = 1
     ansArr.append(s)
 
-'''
+
 # 행렬로 잘 저장되는지 테스트 출력
 print("\n")
-for i in range(len(ans)):
-    print('{}\n{}\n'.format(story[i][0], story[i][1]), '{}\n{}\n'.format(storyArr[i][0].T, storyArr[i][1].T))
+for i in range(len(story)):
+    for j in range(len(story[i])):
+        print(story[i][j])
+    for j in range(len(story[i])):
+        print(storyArr[i][:, j].T)
 for i in range(len(ans)):
     print(question[i], '\n', questionArr[i].T)
 for i in range(len(ans)):
     print(ans[i], '\n', ansArr[i].T)
-'''
+
+# PAUSE
+input()
 
 # Input (Sentences)
 X = tf.placeholder(tf.float32, shape=[_WORD, None])
@@ -247,7 +259,7 @@ while flag:
         i = np.argmax(result)
         percent = int(result[0][i])
         result[0, i] = -1
-        str1 = str1 + "{}\t\t".format(dictionary[i])
+        str1 = str1 + "%-12s" % dictionary[i]
         for i in range(int(percent/2)):
             str1 = str1 + '|'
         str1 = str1 + " {}%\n".format(percent)
