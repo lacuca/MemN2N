@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 # train data 가져오기
-f = open('train.txt', 'r')
+f = open('train_1k.txt', 'r')
 data = f.readlines()
 f.close()
 
@@ -16,30 +16,23 @@ story = []
 question = []
 ans = []
 
+flag = True
 
-flag = False    # 새로운 스토리 라인 인가?
 for l in data:
-    line = l.split()
-    if float(line[0]) == 1:
-        # print(l,  'NEW STORY LINE')
-        # print(story)
-        # print("=" * 20)
+    if flag:
         story.append([])
-        flag = True
+        flag = False
+    line = l.split()
     if '.' in line[-1]:
         line[-1] = line[-1].replace('.', '')
         story[-1].append(line[1:])
-    else:
-        for i, word in enumerate(line):
-            if '?' in word:
-                line[i] = word.replace('?', '')
-                question.append(line[1:i+1])
-                ans.append(line[i+1])
-                if not flag:
-                    story.append(story[-1].copy())
-                else:
-                    flag = False
-                break
+    for i, word in enumerate(line):
+        if '?' in word:
+            line[i] = word.replace('?', '')
+            question.append(line[1:i+1])
+            ans.append(line[i+1])
+            flag = True
+            break
 
 # 테스트 출력
 print('받아온 문항 수: {}문항'.format(len(ans)))
@@ -70,7 +63,7 @@ for l in data:
             index = index + 1
 
 # 테스트 출력
-print('사용된 단어: {}종류\n'.format(dictionary.index('')), dictionary)
+print('사용된 단어: {}종류\n'.format(len(dictionary)), dictionary)
 
 sentence = np.zeros([_WORD, 1])
 
@@ -97,21 +90,16 @@ for word in ans:
     s[dictionary.index(word), 0] = 1
     ansArr.append(s)
 
-
+'''
 # 행렬로 잘 저장되는지 테스트 출력
 print("\n")
-for i in range(len(story)):
-    for j in range(len(story[i])):
-        print(story[i][j])
-    for j in range(len(story[i])):
-        print(storyArr[i][:, j].T)
+for i in range(len(ans)):
+    print('{}\n{}\n'.format(story[i][0], story[i][1]), '{}\n{}\n'.format(storyArr[i][0].T, storyArr[i][1].T))
 for i in range(len(ans)):
     print(question[i], '\n', questionArr[i].T)
 for i in range(len(ans)):
     print(ans[i], '\n', ansArr[i].T)
-
-# PAUSE
-input()
+'''
 
 # Input (Sentences)
 X = tf.placeholder(tf.float32, shape=[_WORD, None])
@@ -120,12 +108,11 @@ Q = tf.placeholder(tf.float32, shape=[_WORD, 1])
 # Desired Answer
 Answer = tf.placeholder(tf.float32, shape=[_WORD, 1])
 # Predicted Answer ( 계산해서 나온것 )
-hypothesis = None
 
 # Weights
-W = tf.Variable(tf.random_normal([_WORD, _MEMORY]), name='weight')
+W = tf.Variable(tf.random_normal([_WORD, _MEMORY],stddev = 0.5), name='weight')
 C = tf.transpose(W)     # Embedding C
-A = tf.Variable(tf.random_normal([_MEMORY, _WORD]), name='Embedding_A')
+A = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev = 0.5), name='Embedding_A')
 B = A                   # Embedding B
 
 # Inputs -> Weights -> Outputs -> O + u -> Predicted Answer
@@ -143,7 +130,8 @@ o = tf.reduce_sum(Outputs * Weights)
 hypothesis = softmax(tf.matmul(W, o+u))
 
 # cost
-cost = tf.reduce_sum(tf.square(hypothesis - Answer))
+cost = tf.reduce_mean(-tf.reduce_sum(Answer*tf.log(hypothesis),axis=1))
+#cost = tf.reduce_sum(tf.square(hypothesis - Answer))
 
 # Minimizing
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.008)
@@ -179,7 +167,7 @@ cost_mean = 1000
 step = 0
 
 # Training
-while cost_mean > 0.6:
+while cost_mean > 0.05:
     if step % 1 == 0:
         result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
         i = np.argmax(result)
@@ -259,7 +247,7 @@ while flag:
         i = np.argmax(result)
         percent = int(result[0][i])
         result[0, i] = -1
-        str1 = str1 + "%-12s" % dictionary[i]
+        str1 = str1 + "{}\t\t".format(dictionary[i])
         for i in range(int(percent/2)):
             str1 = str1 + '|'
         str1 = str1 + " {}%\n".format(percent)
