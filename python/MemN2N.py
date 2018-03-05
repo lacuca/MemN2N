@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import os
 
 # train data 가져오기
 f = open('train_1k.txt', 'r')
@@ -16,23 +17,23 @@ story = []
 question = []
 ans = []
 
-flag = True
-
+story.append([])
 for l in data:
-    if flag:
-        story.append([])
-        flag = False
     line = l.split()
+    if float(line[0]) == 1:
+        del story[-1]
+        story.append([])
     if '.' in line[-1]:
         line[-1] = line[-1].replace('.', '')
         story[-1].append(line[1:])
-    for i, word in enumerate(line):
-        if '?' in word:
-            line[i] = word.replace('?', '')
-            question.append(line[1:i+1])
-            ans.append(line[i+1])
-            flag = True
-            break
+    else:
+        for i, word in enumerate(line):
+            if '?' in word:
+                line[i] = word.replace('?', '')
+                question.append(line[1:i+1])
+                ans.append(line[i+1])
+                story.append(story[-1].copy())
+                break
 
 # 테스트 출력
 print('받아온 문항 수: {}문항'.format(len(ans)))
@@ -110,9 +111,9 @@ Answer = tf.placeholder(tf.float32, shape=[_WORD, 1])
 # Predicted Answer ( 계산해서 나온것 )
 
 # Weights
-W = tf.Variable(tf.random_normal([_WORD, _MEMORY],stddev = 0.5), name='weight')
+W = tf.Variable(tf.random_normal([_WORD, _MEMORY], stddev=0.5), name='weight')
 C = tf.transpose(W)     # Embedding C
-A = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev = 0.5), name='Embedding_A')
+A = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev=0.5), name='Embedding_A')
 B = A                   # Embedding B
 
 # Inputs -> Weights -> Outputs -> O + u -> Predicted Answer
@@ -130,11 +131,11 @@ o = tf.reduce_sum(Outputs * Weights)
 hypothesis = softmax(tf.matmul(W, o+u))
 
 # cost
-cost = tf.reduce_mean(-tf.reduce_sum(Answer*tf.log(hypothesis),axis=1))
-#cost = tf.reduce_sum(tf.square(hypothesis - Answer))
+cost = tf.reduce_mean(-tf.reduce_sum(Answer*tf.log(hypothesis), axis=1))
+# cost = tf.reduce_sum(tf.square(hypothesis - Answer))
 
 # Minimizing
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.008)
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.005)
 train = optimizer.minimize(cost)
 
 # Launch the graph in a session.
@@ -153,13 +154,13 @@ print("[Answer] {}".format(ans[0]))
 result = None
 for step in range(1001):
     if step % 200 == 0:
-        result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
+        result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[2], Q: questionArr[2], Answer: ansArr[2]})
         i = np.argmax(result)
         print("[{}'s Output] {}".format(step, dictionary[i]))
         W_value, A_value, cost_value = sess.run([W, A, cost],
-                                                feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
+                                                feed_dict={X: storyArr[2], Q: questionArr[2], Answer: ansArr[2]})
         print(W_value[0, 0], cost_value)
-    sess.run(train, feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
+    sess.run(train, feed_dict={X: storyArr[2], Q: questionArr[2], Answer: ansArr[2]})
 '''
 
 # 초기값설정
@@ -167,17 +168,19 @@ cost_mean = 1000
 step = 0
 
 # Training
-while cost_mean > 0.05:
+while cost_mean > 0.07:
     if step % 1 == 0:
         result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
         i = np.argmax(result)
         print("[{}'s Output] {}\nCost: {}".format(step, dictionary[i], cost_mean))
     cost_mean = 0
-    for index in range(len(storyArr)):
+    for index in range(len(ans)):
+        # print(storyArr[index])
+        # os.system("Pause")
         sess.run(train, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]})
         cost_value = sess.run(cost, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]})
         cost_mean = cost_mean + cost_value
-    cost_mean = cost_mean / len(storyArr)
+    cost_mean = cost_mean / len(ans)
     step = step + 1
 
 result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
@@ -187,7 +190,6 @@ print("[{}'s Output] {}\nCost: {}".format(step, dictionary[i],cost_mean))
 # 사용자 인터페이스
 flag = True
 
-
 def refineWord(list):
     for i, word in enumerate(list):
         if '.' in word:
@@ -195,14 +197,25 @@ def refineWord(list):
         elif '?' in word:
             list[i] = list[i].replace('?', '')
 
-
 while flag:
     print('\n\nStory를 입력해주세요')
     print('END 를 입력하면 Story 입력을 종료합니다')
+    print('파일로도 가능합니다 [예: FILE test.txt]')
     user_story = []
     while True:
         user = input()
         if user == 'END':
+            break
+        elif 'FILE' in user:
+            temp = user.split()
+            file = temp[1]
+            f = open(file, 'r')
+            data = f.readlines()
+            f.close()
+            for i in range(len(data)):
+                data[i] = data[i].split()
+                refineWord(data[i])
+            user_story = data
             break
         else:
             temp = user.split()
@@ -212,7 +225,6 @@ while flag:
     user = input()
     user_question = user.split()
     refineWord(user_question)
-
     # print('Answer을 입력해주세요')
     # user_answer = input()
 
@@ -238,7 +250,6 @@ while flag:
         print(" ".join(story))
     print("[Question] {}?".format(" ".join(user_question)))
     # print("[Answer] {}".format(user_answer))
-
     result = sess.run(tf.transpose(hypothesis),
                       feed_dict={X: user_storyArr, Q: user_questionArr})
     result = result * 100
