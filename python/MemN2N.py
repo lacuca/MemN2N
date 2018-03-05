@@ -258,7 +258,7 @@ while flag:
         i = np.argmax(result)
         percent = int(result[0][i])
         result[0, i] = -1
-        str1 = str1 + "{}\t\t".format(dictionary[i])
+        str1 = str1 + "%-12s" % dictionary[i]
         for i in range(int(percent/2)):
             str1 = str1 + '|'
         str1 = str1 + " {}%\n".format(percent)
