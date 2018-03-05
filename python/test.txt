@@ -1,2 +1,10 @@
-Sandra went to the bedroom.
-Daniel went to the garden.
+Sandra travelled to the kitchen.
+Sandra travelled to the hallway.
+Mary went to the bathroom.
+Sandra moved to the garden.
+Sandra travelled to the office.
+Daniel journeyed to the hallway.
+Daniel journeyed to the office.
+John moved to the hallway.
+John travelled to the bathroom.
+John journeyed to the office.
