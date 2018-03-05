@@ -64,7 +64,7 @@ for l in data:
             index = index + 1
 
 # 테스트 출력
-print('사용된 단어: {}종류\n'.format(dictionary.index('')), dictionary)
+print('사용된 단어: {}종류\n'.format(len(dictionary)), dictionary)
 
 sentence = np.zeros([_WORD, 1])
 
@@ -94,11 +94,8 @@ for word in ans:
 '''
 # 행렬로 잘 저장되는지 테스트 출력
 print("\n")
-for i in range(len(story)):
-    for j in range(len(story[i])):
-        print(story[i][j])
-    for j in range(len(story[i])):
-        print(storyArr[i][:, j].T)
+for i in range(len(ans)):
+    print('{}\n{}\n'.format(story[i][0], story[i][1]), '{}\n{}\n'.format(storyArr[i][0].T, storyArr[i][1].T))
 for i in range(len(ans)):
     print(question[i], '\n', questionArr[i].T)
 for i in range(len(ans)):
@@ -112,7 +109,6 @@ Q = tf.placeholder(tf.float32, shape=[_WORD, 1])
 # Desired Answer
 Answer = tf.placeholder(tf.float32, shape=[_WORD, 1])
 # Predicted Answer ( 계산해서 나온것 )
-hypothesis = None
 
 # Weights
 W = tf.Variable(tf.random_normal([_WORD, _MEMORY], stddev=0.5), name='weight')
@@ -262,7 +258,7 @@ while flag:
         i = np.argmax(result)
         percent = int(result[0][i])
         result[0, i] = -1
-        str1 = str1 + "%-12s" % dictionary[i]
+        str1 = str1 + "{}\t\t".format(dictionary[i])
         for i in range(int(percent/2)):
             str1 = str1 + '|'
         str1 = str1 + " {}%\n".format(percent)
