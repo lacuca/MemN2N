@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 # train data 가져오기
-f = open('train.txt', 'r')
+f = open('train_1k  .txt', 'r')
 data = f.readlines()
 f.close()
 
@@ -16,16 +16,12 @@ story = []
 question = []
 ans = []
 
-
-flag = False    # 새로운 스토리 라인 인가?
+story.append([])
 for l in data:
     line = l.split()
     if float(line[0]) == 1:
-        # print(l,  'NEW STORY LINE')
-        # print(story)
-        # print("=" * 20)
+        del story[-1]
         story.append([])
-        flag = True
     if '.' in line[-1]:
         line[-1] = line[-1].replace('.', '')
         story[-1].append(line[1:])
@@ -35,10 +31,7 @@ for l in data:
                 line[i] = word.replace('?', '')
                 question.append(line[1:i+1])
                 ans.append(line[i+1])
-                if not flag:
-                    story.append(story[-1].copy())
-                else:
-                    flag = False
+                story.append(story[-1].copy())
                 break
 
 # 테스트 출력
@@ -97,7 +90,7 @@ for word in ans:
     s[dictionary.index(word), 0] = 1
     ansArr.append(s)
 
-
+'''
 # 행렬로 잘 저장되는지 테스트 출력
 print("\n")
 for i in range(len(story)):
@@ -109,9 +102,7 @@ for i in range(len(ans)):
     print(question[i], '\n', questionArr[i].T)
 for i in range(len(ans)):
     print(ans[i], '\n', ansArr[i].T)
-
-# PAUSE
-input()
+'''
 
 # Input (Sentences)
 X = tf.placeholder(tf.float32, shape=[_WORD, None])
@@ -123,9 +114,9 @@ Answer = tf.placeholder(tf.float32, shape=[_WORD, 1])
 hypothesis = None
 
 # Weights
-W = tf.Variable(tf.random_normal([_WORD, _MEMORY]), name='weight')
+W = tf.Variable(tf.random_normal([_WORD, _MEMORY], stddev = 0.5), name='weight')
 C = tf.transpose(W)     # Embedding C
-A = tf.Variable(tf.random_normal([_MEMORY, _WORD]), name='Embedding_A')
+A = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev = 0.5), name='Embedding_A')
 B = A                   # Embedding B
 
 # Inputs -> Weights -> Outputs -> O + u -> Predicted Answer
@@ -179,7 +170,7 @@ cost_mean = 1000
 step = 0
 
 # Training
-while cost_mean > 0.6:
+while cost_mean > 0.1:
     if step % 1 == 0:
         result = sess.run(tf.transpose(hypothesis), feed_dict={X: storyArr[0], Q: questionArr[0], Answer: ansArr[0]})
         i = np.argmax(result)
