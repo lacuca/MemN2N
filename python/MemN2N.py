@@ -8,7 +8,7 @@ f.close()
 
 # 상수 Constant
 _WORD = 20  # 사전의 크기 (사전이 저장할 수 있는 최대 WORD)
-_MEMORY = 30  # Memory Vector의 크기
+_MEMORY = 40  # Memory Vector의 크기
 #################
 
 
@@ -112,10 +112,13 @@ Answer = tf.placeholder(tf.float32, shape=[_WORD, 1])
 # Predicted Answer ( 계산해서 나온것 )
 
 # Weights
-W = tf.Variable(tf.random_normal([_WORD, _MEMORY], stddev=0.3), name='weight')
-C = tf.transpose(W)  # Embedding C
-A = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev=0.3), name='Embedding_A')
-B = A  # Embedding B
+stddev = 0.3
+W = tf.Variable(tf.random_normal([_WORD, _MEMORY], stddev=stddev), name='weight')
+C = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev=stddev), name='Embedding_C')
+# C = tf.transpose(W)  # Embedding C
+A = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev=stddev), name='Embedding_A')
+B = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev=stddev), name='Embedding_B')
+# B = A  # Embedding B
 
 # Inputs -> Weights -> Outputs -> O + u -> Predicted Answer
 Inputs = tf.matmul(A, X)
@@ -137,7 +140,8 @@ cost = tf.reduce_mean(-tf.reduce_sum(Answer * tf.log(hypothesis), axis=1))
 # cost = tf.reduce_sum(tf.square(hypothesis - Answer))
 
 # Minimizing
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.005)
+learning_rate = 0.01
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
 train = optimizer.minimize(cost)
 
 # Launch the graph in a session.
@@ -171,16 +175,18 @@ cost_mean = 1000
 step = 0
 cnt = 0
 # Training
-while cost_mean > 0.063:
-    W_value, A_value, result = sess.run([W, A, tf.transpose(hypothesis)],
-                                        feed_dict={X: storyArr[test], Q: questionArr[test], Answer: ansArr[test]})
-    i = np.argmax(result)
-    print("[After {} Loops, Output] {}".format(step, dictionary[i]))
-    print("Cost", cost_mean, "W", W_value[0, 0], "A", A_value[0, 0])
-    if dictionary[i] == ans[test]:  # Desired Answer 에 수렴하면 10 Loop 후 정지
-        cnt = cnt + 1
-        if cnt >= 10 and cost_mean < 0.066:
-            break
+while cost_mean > 0.04:
+    if step % 10 == 0:
+        W_value, A_value, result = sess.run([W, A, tf.transpose(hypothesis)],
+                                            feed_dict={X: storyArr[test], Q: questionArr[test], Answer: ansArr[test]})
+        i = np.argmax(result)
+        print("[After {} Loops, Output] {}".format(step, dictionary[i]))
+        print("Cost", cost_mean, "W", W_value[0, 0], "A", A_value[0, 0])
+        if dictionary[i] == ans[test]:  # Desired Answer 에 수렴 정지
+            cnt = cnt + 1
+            if cnt >= 2 and cost_mean < 0.05:
+                break
+    previous_cost_mean = cost_mean
     cost_mean = 0
     for index in range(len(ans)):
         # if index % 201 == 0:
@@ -197,6 +203,12 @@ while cost_mean > 0.063:
         cost_mean = cost_mean + cost_value
     cost_mean = cost_mean / len(ans)
     step = step + 1
+    if step % 25 == 0 and step <= 101:
+        learning_rate = learning_rate / 2
+        print("%d loops learning_rate : %f" % (step, learning_rate))
+    if previous_cost_mean < cost_mean:
+        print('!! 더이상 학습이 안됩니다 !!')
+        break
 
 W_value, A_value, result = sess.run([W, A, tf.transpose(hypothesis)],
                                     feed_dict={X: storyArr[test], Q: questionArr[test], Answer: ansArr[test]})
