@@ -14,11 +14,11 @@
       <file leaf-file-name="MemN2N.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/MemN2N.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="224">
-              <caret line="179" column="30" lean-forward="false" selection-start-line="179" selection-start-column="30" selection-end-line="179" selection-end-column="30" />
+            <state relative-caret-position="313">
+              <caret line="207" column="47" lean-forward="false" selection-start-line="207" selection-start-column="47" selection-end-line="207" selection-end-column="47" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
-                <element signature="e#3758#4348#1" expanded="false" />
+                <element signature="e#3984#4574#1" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -45,8 +45,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="953" />
-    <option name="width" value="974" />
+    <option name="x" value="1129" />
+    <option name="width" value="798" />
     <option name="height" value="1047" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
@@ -286,14 +286,15 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="953" y="0" width="974" height="1047" extended-state="0" />
+    <frame x="1129" y="0" width="798" height="1047" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2176235" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.7486279" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30625686" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24973656" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -322,7 +323,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <element signature="e#3758#4348#1" expanded="false" />
+            <element signature="e#3984#4574#1" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -333,7 +334,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <element signature="e#3758#4348#1" expanded="false" />
+            <element signature="e#3984#4574#1" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -344,7 +345,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <element signature="e#3758#4348#1" expanded="false" />
+            <element signature="e#3984#4574#1" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -355,7 +356,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <element signature="e#3758#4348#1" expanded="false" />
+            <element signature="e#3984#4574#1" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -366,7 +367,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <element signature="e#3758#4348#1" expanded="false" />
+            <element signature="e#3984#4574#1" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -377,7 +378,7 @@
           <caret line="11" column="17" lean-forward="false" selection-start-line="11" selection-start-column="17" selection-end-line="11" selection-end-column="17" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <element signature="e#3758#4348#1" expanded="false" />
+            <element signature="e#3984#4574#1" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -390,7 +391,7 @@
           <caret line="11" column="17" lean-forward="true" selection-start-line="11" selection-start-column="17" selection-end-line="11" selection-end-column="17" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <element signature="e#3758#4348#1" expanded="false" />
+            <element signature="e#3984#4574#1" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -406,11 +407,11 @@
     <entry file="file://$PROJECT_DIR$/../../../Python/BasicStudy/main.py" />
     <entry file="file://$PROJECT_DIR$/MemN2N.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="224">
-          <caret line="179" column="30" lean-forward="false" selection-start-line="179" selection-start-column="30" selection-end-line="179" selection-end-column="30" />
+        <state relative-caret-position="313">
+          <caret line="207" column="47" lean-forward="false" selection-start-line="207" selection-start-column="47" selection-end-line="207" selection-end-column="47" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-            <element signature="e#3758#4348#1" expanded="false" />
+            <element signature="e#3984#4574#1" expanded="false" />
           </folding>
         </state>
       </provider>
