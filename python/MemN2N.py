@@ -9,7 +9,7 @@ f.close()
 # 상수 Constant
 _WORD = 20  # 사전의 크기 (사전이 저장할 수 있는 최대 WORD)
 _MEMORY = 40  # Memory Vector의 크기
-#################
+##################
 
 
 story = []
