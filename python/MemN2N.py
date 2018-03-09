@@ -8,7 +8,7 @@ f.close()
 
 # 상수 Constant
 _WORD = 20  # 사전의 크기 (사전이 저장할 수 있는 최대 WORD)
-_MEMORY = 40  # Memory Vector의 크기
+_MEMORY = 5  # Memory Vector의 크기
 ##################
 
 
@@ -37,6 +37,9 @@ for l in data:
 # 테스트 출력
 print('받아온 문항 수: {}문항'.format(len(ans)))
 
+# 출력 확인
+# print(story, '\n\n', question, '\n\n', ans)
+
 dictionary = []
 for i in range(_WORD):
     dictionary.append('')
@@ -63,6 +66,9 @@ for l in data:
         if word not in dictionary:
             dictionary[index] = word
             index = index + 1
+
+
+
 
 # 테스트 출력
 print('사용된 단어: {}종류\n'.format(dictionary.index('')), dictionary)
@@ -112,7 +118,7 @@ Answer = tf.placeholder(tf.float32, shape=[_WORD, 1])
 # Predicted Answer ( 계산해서 나온것 )
 
 # Weights
-stddev = 0.3
+stddev = 0.1
 W = tf.Variable(tf.random_normal([_WORD, _MEMORY], stddev=stddev), name='weight')
 C = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev=stddev), name='Embedding_C')
 # C = tf.transpose(W)  # Embedding C
@@ -133,7 +139,10 @@ def softmax(M):
 
 Weights = softmax(tf.matmul(tf.transpose(u), Inputs))
 Outputs = tf.matmul(C, X)
-o = tf.reduce_sum(Outputs * Weights)
+#o = tf.reduce_sum(Outputs * Weights)
+
+o = tf.matmul(Outputs, tf.transpose(Weights))
+
 hypothesis = softmax(tf.matmul(W, o + u))
 # cost
 cost = tf.reduce_mean(-tf.reduce_sum(Answer * tf.log(hypothesis), axis=1))
@@ -149,6 +158,9 @@ sess = tf.Session()
 # Initializes global variables in the graph.
 sess.run(tf.global_variables_initializer())
 
+
+
+##############################
 print("\nTrain이 잘됐는지 다음 스토리로 테스트 해봅시다\n\n[STORY]")
 test = 8   # TEST 할 문제 번호
 for i in range(len(story[test])):
@@ -195,10 +207,35 @@ while cost_mean > 0.04:
         sess.run(train, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]})
         cost_value = sess.run(cost, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]})
         str1 = '{}'.format(cost_value)
+
+
+        '''
+        print("inputs: \n", sess.run(Inputs,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
+        print("u: \n",sess.run(u,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
+        print("outputs:\n",sess.run(Outputs,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
+
+        print("weights:\n",sess.run(Weights,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
+        print("transpose weights:\n",sess.run(tf.transpose(Weights),feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
+        print("o:\n",sess.run(o,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
+        print("o+u:\n",sess.run(o+u,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
+        input()
+'''
+
+
+
+
+
+        
         if str1 == 'nan':
             print('[nan ERROR at %d]' % index)
             print(story[index])
             print(sess.run(W, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
+
+
+    
+            
+
+            
             exit()
         cost_mean = cost_mean + cost_value
     cost_mean = cost_mean / len(ans)
