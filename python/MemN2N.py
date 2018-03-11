@@ -7,10 +7,14 @@ data = f.readlines()
 f.close()
 
 # 상수 Constant
+test = 1  # TEST 할 문제 번호
+stddev = 0.1  # 표준 편차
+learning_rate = 0.01  # 학습률
 _WORD = 20  # 사전의 크기 (사전이 저장할 수 있는 최대 WORD)
-_MEMORY = 5  # Memory Vector의 크기
-##################
-
+_MEMORY = 10  # Memory Vector 의 크기
+#################
+print("[Constant]", "test: {}, stddev: {}, learning_rate: {}, WORD: {}, MEMORY: {}"
+      .format(test, stddev, learning_rate, _WORD, _MEMORY))
 
 story = []
 question = []
@@ -36,9 +40,6 @@ for l in data:
 
 # 테스트 출력
 print('받아온 문항 수: {}문항'.format(len(ans)))
-
-# 출력 확인
-# print(story, '\n\n', question, '\n\n', ans)
 
 dictionary = []
 for i in range(_WORD):
@@ -66,9 +67,6 @@ for l in data:
         if word not in dictionary:
             dictionary[index] = word
             index = index + 1
-
-
-
 
 # 테스트 출력
 print('사용된 단어: {}종류\n'.format(dictionary.index('')), dictionary)
@@ -109,16 +107,17 @@ for i in range(len(ans)):
     print(ans[i], '\n', ansArr[i].T)
 '''
 
+############################### 여기서부터 MemN2N
 # Input (Sentences)
 X = tf.placeholder(tf.float32, shape=[_WORD, None])
 # Question q
 Q = tf.placeholder(tf.float32, shape=[_WORD, 1])
 # Desired Answer
-Answer = tf.placeholder(tf.float32, shape=[_WORD, 1])
+Y = tf.placeholder(tf.float32, shape=[_WORD, 1])
 # Predicted Answer ( 계산해서 나온것 )
+# Hypothesis
 
 # Weights
-stddev = 0.1
 W = tf.Variable(tf.random_normal([_WORD, _MEMORY], stddev=stddev), name='weight')
 C = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev=stddev), name='Embedding_C')
 # C = tf.transpose(W)  # Embedding C
@@ -126,43 +125,49 @@ A = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev=stddev), name='Embeddi
 B = tf.Variable(tf.random_normal([_MEMORY, _WORD], stddev=stddev), name='Embedding_B')
 # B = A  # Embedding B
 
-# Inputs -> Weights -> Outputs -> O + u -> Predicted Answer
-Inputs = tf.matmul(A, X)
-u = tf.matmul(B, Q)
-
-
+'''
 def softmax(M):
     M = tf.exp(M)
     M = M / tf.reduce_sum(M)
     return M
+'''
 
-
-Weights = softmax(tf.matmul(tf.transpose(u), Inputs))
+Inputs = tf.matmul(A, X)
+u = tf.matmul(B, Q)
+# Weights = softmax(tf.matmul(tf.transpose(u), Inputs))
+Weights = tf.nn.softmax(tf.matmul(tf.transpose(u), Inputs))
 Outputs = tf.matmul(C, X)
-#o = tf.reduce_sum(Outputs * Weights)
+o = tf.reduce_sum(Outputs * Weights, axis=1, keep_dims=True)
+# hypothesis = softmax(tf.matmul(W, o + u))
+hypothesis = tf.nn.softmax(tf.transpose(tf.matmul(W, o + u)))
+hypothesis = tf.transpose(hypothesis)
 
-o = tf.matmul(Outputs, tf.transpose(Weights))
-
-hypothesis = softmax(tf.matmul(W, o + u))
-# cost
-cost = tf.reduce_mean(-tf.reduce_sum(Answer * tf.log(hypothesis), axis=1))
+# cost function
+# # cross-entropy cost 함수
+# cost = tf.reduce_mean(-tf.reduce_sum(Answer * tf.log(hypothesis), axis=1))
+# # Classification 을 할때 사용 (값이 0, 1 정의)
+cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) *
+                       tf.log(1 - hypothesis))
+# # Hypothesis 가 선형일때만 사용가능
 # cost = tf.reduce_sum(tf.square(hypothesis - Answer))
 
+# Checking
+temp1 = tf.argmax(hypothesis, 0)
+temp2 = tf.argmax(Y, 0)
+Answer = temp1[0]
+Correct = tf.equal(temp1[0], temp2[0])
+check_list = (Inputs, u, Weights, Outputs, o, hypothesis, Answer)
 # Minimizing
-learning_rate = 0.01
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
 train = optimizer.minimize(cost)
+#################################
 
 # Launch the graph in a session.
 sess = tf.Session()
 # Initializes global variables in the graph.
 sess.run(tf.global_variables_initializer())
 
-
-
-##############################
 print("\nTrain이 잘됐는지 다음 스토리로 테스트 해봅시다\n\n[STORY]")
-test = 8   # TEST 할 문제 번호
 for i in range(len(story[test])):
     print(" ".join(story[test][i]))
 print("[Question] {}?".format(" ".join(question[test])))
@@ -183,86 +188,77 @@ for step in range(1001):
 '''
 
 # 초기값설정
-cost_mean = 1000
+cost_mean = 100
+accuracy = 0
+purpose = 80    # 목표 정확도 (95% 가 목표다)
 step = 0
 cnt = 0
-# Training
-while cost_mean > 0.04:
+##################################
+#           Training             #
+##################################
+while True:
     if step % 10 == 0:
-        W_value, A_value, result = sess.run([W, A, tf.transpose(hypothesis)],
-                                            feed_dict={X: storyArr[test], Q: questionArr[test], Answer: ansArr[test]})
-        i = np.argmax(result)
-        print("[After {} Loops, Output] {}".format(step, dictionary[i]))
-        print("Cost", cost_mean, "W", W_value[0, 0], "A", A_value[0, 0])
-        if dictionary[i] == ans[test]:  # Desired Answer 에 수렴 정지
-            cnt = cnt + 1
-            if cnt >= 2 and cost_mean < 0.05:
-                break
+        W_value, Answer_value = sess.run([W, Answer],
+                                         feed_dict={X: storyArr[test], Q: questionArr[test], Y: ansArr[test]})
+        Answer_value = dictionary[Answer_value]
+        print("[After {} Loops, Output] {}".format(step, Answer_value))
+        print("Accuracy {}%".format(accuracy), "Cost", cost_mean, "W", W_value[0, 0])
+    if accuracy > purpose:
+        print("현재 Accuracy {}% 입니다. 계속하시겠습니까?".format(accuracy))
+        user = input("[Y/N]")
+        if user == 'Y':
+            purpose = purpose + 1
+        else:
+            break
     previous_cost_mean = cost_mean
     cost_mean = 0
+    accuracy = 0
     for index in range(len(ans)):
-        # if index % 201 == 0:
-        #     print(storyArr[index])
-        #     input('%d Anything:' % index)
-        sess.run(train, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]})
-        cost_value = sess.run(cost, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]})
+        sess.run(train, feed_dict={X: storyArr[index], Q: questionArr[index], Y: ansArr[index]})
+        cost_value, Correct_value, check_str = sess.run([cost, Correct, check_list],
+                                                        feed_dict={X: storyArr[index],
+                                                                   Q: questionArr[index], Y: ansArr[index]})
         str1 = '{}'.format(cost_value)
-
-
-        '''
-        print("inputs: \n", sess.run(Inputs,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
-        print("u: \n",sess.run(u,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
-        print("outputs:\n",sess.run(Outputs,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
-
-        print("weights:\n",sess.run(Weights,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
-        print("transpose weights:\n",sess.run(tf.transpose(Weights),feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
-        print("o:\n",sess.run(o,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
-        print("o+u:\n",sess.run(o+u,feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
-        input()
-'''
-
-
-
-
-
-        
         if str1 == 'nan':
             print('[nan ERROR at %d]' % index)
             print(story[index])
-            print(sess.run(W, feed_dict={X: storyArr[index], Q: questionArr[index], Answer: ansArr[index]}))
-
-
-    
-            
-
-            
+            print(sess.run(W, feed_dict={X: storyArr[index], Q: questionArr[index], Y: ansArr[index]}))
             exit()
+        ## 정상적으로 학습되는지 확인하는 부분
+        # print('[Inputs]\n{}\n[u]\n{}\n[Weights]\n{}'
+        #       '\n[Outputs]\n{}\n[o]\n{}\n[hypothesis]\n{}\n'.format(check_str[0], check_str[1], check_str[2],
+        #                                                             check_str[3], check_str[4], check_str[5]))
+        # input('check')
         cost_mean = cost_mean + cost_value
+        if Correct_value:
+            accuracy = accuracy + 1
     cost_mean = cost_mean / len(ans)
+    accuracy = accuracy * 100. / len(ans)
     step = step + 1
-    if step % 25 == 0 and step <= 101:
+    if step % 100 == 0 and step <= 400:
         learning_rate = learning_rate / 2
         print("%d loops learning_rate : %f" % (step, learning_rate))
     if previous_cost_mean < cost_mean:
         print('!! 더이상 학습이 안됩니다 !!')
         break
 
-W_value, A_value, result = sess.run([W, A, tf.transpose(hypothesis)],
-                                    feed_dict={X: storyArr[test], Q: questionArr[test], Answer: ansArr[test]})
-i = np.argmax(result)
-print("[After {} Loops, Output] {}".format(step, dictionary[i]))
-print("Cost", cost_mean, "W", W_value[0, 0], "A", A_value[0, 0])
+W_value, Answer_value = sess.run([W, Answer],
+                                 feed_dict={X: storyArr[test], Q: questionArr[test], Y: ansArr[test]})
+print("[After {} Loops, Output] {}".format(step, Answer_value))
+print("Accuracy {}%".format(accuracy), "Cost", cost_mean, "W", W_value[0, 0])
 
-# 사용자 인터페이스
+###################################
+# TEST
+###################################
 flag = True
 
 
-def refineWord(list):
-    for i, word in enumerate(list):
+def refineWord(list_):
+    for i, word in enumerate(list_):
         if '.' in word:
-            list[i] = list[i].replace('.', '')
+            list_[i] = list_[i].replace('.', '')
         elif '?' in word:
-            list[i] = list[i].replace('?', '')
+            list_[i] = list_[i].replace('?', '')
 
 
 while flag:
@@ -293,12 +289,9 @@ while flag:
     user = input()
     user_question = user.split()
     refineWord(user_question)
-    # print('Answer을 입력해주세요')
-    # user_answer = input()
 
     user_storyArr = np.zeros([_WORD, len(user_story)])
     user_questionArr = np.zeros([_WORD, 1])
-    # user_answerArr = np.zeros([_WORD, 1])
 
     try:
         for i, sent in enumerate(user_story):
@@ -317,7 +310,6 @@ while flag:
     for story in user_story:
         print(" ".join(story))
     print("[Question] {}?".format(" ".join(user_question)))
-    # print("[Answer] {}".format(user_answer))
     result = sess.run(tf.transpose(hypothesis),
                       feed_dict={X: user_storyArr, Q: user_questionArr})
     result = result * 100
@@ -330,5 +322,4 @@ while flag:
         for i in range(int(percent / 2)):
             str1 = str1 + '|'
         str1 = str1 + " {}%\n".format(percent)
-
     print("[Output]\n{}".format(str1))
