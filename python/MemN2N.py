@@ -175,7 +175,7 @@ cost_mean = 1000
 step = 0
 cnt = 0
 # Training
-while cost_mean > 0.04:
+while cost_mean > 0.06:
     if step % 10 == 0:
         W_value, A_value, result = sess.run([W, A, tf.transpose(hypothesis)],
                                             feed_dict={X: storyArr[test], Q: questionArr[test], Answer: ansArr[test]})
