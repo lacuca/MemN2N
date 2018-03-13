@@ -11,7 +11,7 @@ test = 1  # TEST 할 문제 번호
 stddev = 0.1  # 표준 편차
 learning_rate = 0.01  # 학습률
 _WORD = 20  # 사전의 크기 (사전이 저장할 수 있는 최대 WORD)
-_MEMORY = 10  # Memory Vector 의 크기
+_MEMORY = 40  # Memory Vector 의 크기
 #################
 print("[Constant]", "test: {}, stddev: {}, learning_rate: {}, WORD: {}, MEMORY: {}"
       .format(test, stddev, learning_rate, _WORD, _MEMORY))
@@ -144,10 +144,10 @@ hypothesis = tf.transpose(hypothesis)
 
 # cost function
 # # cross-entropy cost 함수
-# cost = tf.reduce_mean(-tf.reduce_sum(Answer * tf.log(hypothesis), axis=1))
+cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), axis=1))
 # # Classification 을 할때 사용 (값이 0, 1 정의)
-cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) *
-                       tf.log(1 - hypothesis))
+# cost = -tf.reduce_mean(Y * tf.log(hypothesis) + (1 - Y) *
+#                        tf.log(1 - hypothesis))
 # # Hypothesis 가 선형일때만 사용가능
 # cost = tf.reduce_sum(tf.square(hypothesis - Answer))
 
@@ -244,9 +244,19 @@ while True:
 
 W_value, Answer_value = sess.run([W, Answer],
                                  feed_dict={X: storyArr[test], Q: questionArr[test], Y: ansArr[test]})
+
 print("[After {} Loops, Output] {}".format(step, Answer_value))
 print("Accuracy {}%".format(accuracy), "Cost", cost_mean, "W", W_value[0, 0])
-
+# Save
+W0, A0, B0, C0 = sess.run([W, A, B, C], feed_dict={X: storyArr[test], Q: questionArr[test], Y: ansArr[test]})
+f = open("save_data.txt", 'w')
+data = '[Constant]\ntest: {}, stddev: {}, learning_rate: {}, WORD: {}, MEMORY: {}\n'.format(test, stddev,
+                                                                                            learning_rate,
+                                                                                            _WORD, _MEMORY)
+f.write(data)
+data = 'W\n{}\nA\n{}\nB\n{}\nC\n{}\n'.format(W0, A0, B0, C0)
+f.write(data)
+f.close()
 ###################################
 # TEST
 ###################################
