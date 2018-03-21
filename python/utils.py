@@ -14,7 +14,7 @@ def refineWord(list_):
             list_[i] = list_[i].replace('?', '')
 
 def matrixToStr (M, name='None'):
-    str1 = None
+    str1 = name + "\n" + "[" +", ".join(str(x) for x in M) + "]"
     # str1 <= String
     return str1
 
