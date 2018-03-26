@@ -14,28 +14,21 @@ def refineWord(list_):
             list_[i] = list_[i].replace('?', '')
 
 def matrixToStr (M, name='None'):
-    str1 = name + "\n" + "[" +", ".join(str(x) for x in M) + "]"
-    # str1 <= String
+    MList = M.tolist()
+    str1 = name + "\n" + "[" +", ".join(str(x) for x in MList) + "]"
     return str1
 
 def strToMatrix (file):
-    matrix = None
-    # matrix <= numpy matrix
+    matrix = np.array(file)
     return matrix
 
-# M : numpy 형식의 Matrix
-# name : 이름
-
-'''
-예를 들어서
-
-파라미터
-M = [ [1 2 3]
-      [4 5 6] ]
-name = 'Weights'
-
-리턴값
-str1 = 'Weights\n[[1, 2, 3], [4, 5, 6]]'
-
-이 되는 함수를 작성
-'''
+def bars(persent, name=''):
+    bars = ""
+    persentCnt = persent
+    while True:
+        persentCnt -= 2
+        bars = bars + "|"
+        if persentCnt < 2:
+            break
+    str1 = name.ljust(12) + bars + " " + str(persent) + "%" 
+    return str1
